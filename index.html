@@ -1485,7 +1485,109 @@
       border-color: var(--primary);
       background: var(--primary-soft);
     }
-  </style>
+  
+    /* ===== 添加到桌面引导 ===== */
+    .install-guide-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 5000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .install-guide-overlay.show {
+      display: flex;
+      animation: fadeIn 0.25s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .install-guide-card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 380px;
+      width: 100%;
+      border: 1px solid var(--border);
+      animation: slideUp 0.3s ease;
+    }
+    .install-guide-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .install-guide-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+    .install-guide-header h3 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .install-guide-header p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .install-guide-steps {
+      margin-bottom: 20px;
+    }
+    .install-step {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .install-step:last-child {
+      margin-bottom: 0;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .step-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .step-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+    .install-guide-close {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .install-guide-close:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+</style>
 </head>
 
 <body>
@@ -3479,6 +3581,7 @@ window.closeNumpad = function() {
 
     
 
+
 </script><!-- 数字输入面板 -->
 <div id="numpad-overlay" class="numpad-overlay" onclick="closeNumpad()">
   <div class="numpad-panel" onclick="event.stopPropagation()">
@@ -3517,5 +3620,79 @@ window.closeNumpad = function() {
 </div>
 
 
+
+<!-- 添加到桌面引导弹窗 -->
+<div id="install-guide-modal" class="install-guide-overlay" style="display:flex;">
+  <div class="install-guide-card">
+    <div class="install-guide-header">
+      <div class="install-guide-icon">💪</div>
+      <h3>把练记添加到桌面</h3>
+      <p>添加后像App一样使用，离线可用，无广告</p>
+    </div>
+    <div class="install-guide-steps">
+      <div class="install-step android-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">用Chrome/Edge打开本页面</div>
+          <div class="step-desc">微信/QQ内置浏览器不支持，请复制链接到浏览器</div>
+        </div>
+      </div>
+      <div class="install-step android-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">点右上角 ⋮ 菜单</div>
+          <div class="step-desc">选择"添加到主屏幕"或"安装应用"</div>
+        </div>
+      </div>
+      <div class="install-step android-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">点桌面图标启动</div>
+          <div class="step-desc">像普通App一样快速进入健身记录</div>
+        </div>
+      </div>
+      <div class="install-step ios-step" style="display:none">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">用Safari打开本页面</div>
+          <div class="step-desc">微信/QQ内置浏览器不支持，请用Safari</div>
+        </div>
+      </div>
+      <div class="install-step ios-step" style="display:none">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">点底部分享按钮 ⬆️</div>
+          <div class="step-desc">往下滑选择"添加到主屏幕"</div>
+        </div>
+      </div>
+      <div class="install-step ios-step" style="display:none">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">点桌面图标启动</div>
+          <div class="step-desc">像普通App一样快速进入健身记录</div>
+        </div>
+      </div>
+    </div>
+    <button class="install-guide-close" onclick="document.getElementById('install-guide-modal').style.display='none'; localStorage.setItem('lianjii_install_guide_shown', '1');">我知道了</button>
+  </div>
+</div>
+
+<script>
+// 页面加载后判断是否隐藏引导弹窗
+window.addEventListener('DOMContentLoaded', function() {
+  try {
+    var modal = document.getElementById('install-guide-modal');
+    if (!modal) return;
+    // 如果是PWA模式或已显示过，隐藏弹窗
+    var isPWA = window.matchMedia('(display-mode: standalone)').matches;
+    var hasShown = localStorage.getItem('lianjii_install_guide_shown');
+    if (isPWA || hasShown) {
+      modal.style.display = 'none';
+    }
+  } catch(e) {
+    console.error(e);
+  }
+});
+</script>
 </body>
 </html>
