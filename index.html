@@ -3684,11 +3684,38 @@ window.closeNumpad = function() {
       </div>
     </div>
     
+    <button id="install-app-btn" class="install-guide-close" style="display:none; background:#2e7d32; margin-bottom:10px;">一键安装到桌面</button>
     <button class="install-guide-close" onclick="document.getElementById('install-guide-modal').style.display='none'; localStorage.setItem('lianjii_install_guide_shown', '1');">我知道了</button>
   </div>
 </div>
 
 <script>
+// 保存beforeinstallprompt事件，用于一键安装
+var deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  // 如果引导弹窗正在显示，显示一键安装按钮
+  var installBtn = document.getElementById('install-app-btn');
+  if (installBtn) installBtn.style.display = 'block';
+});
+
+// 一键安装按钮点击事件
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'install-app-btn') {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(choiceResult) {
+        if (choiceResult.outcome === 'accepted') {
+          document.getElementById('install-guide-modal').style.display = 'none';
+          localStorage.setItem('lianjii_install_guide_shown', '1');
+        }
+        deferredPrompt = null;
+      });
+    }
+  }
+});
+
 window.addEventListener('DOMContentLoaded', function() {
   try {
     var modal = document.getElementById('install-guide-modal');
@@ -3715,6 +3742,11 @@ window.addEventListener('DOMContentLoaded', function() {
     // 微信/QQ内置浏览器提示
     if (isWechat || isQQ) {
       document.getElementById('wechat-tip').style.display = 'block';
+    }
+    
+    // 如果已经捕获到beforeinstallprompt，显示一键安装按钮
+    if (deferredPrompt) {
+      document.getElementById('install-app-btn').style.display = 'block';
     }
   } catch(e) {
     console.error(e);
