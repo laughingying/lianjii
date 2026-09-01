@@ -1308,8 +1308,186 @@
       margin-bottom: 4px;
       letter-spacing: 2px;
     }
+    /* ===== 数字输入面板 ===== */
+    .numpad-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 9999;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .numpad-overlay.show {
+      display: flex;
+      animation: numpadFadeIn 0.2s ease;
+    }
+    @keyframes numpadFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .numpad-panel {
+      width: 100%;
+      max-width: 500px;
+      background: var(--bg-card);
+      border-radius: 24px 24px 0 0;
+      padding: 16px 16px calc(16px + var(--safe-bottom));
+      animation: numpadSlideUp 0.25s ease;
+      border-top: 1px solid var(--border);
+    }
+    @keyframes numpadSlideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .numpad-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .numpad-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .numpad-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .numpad-value {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--primary);
+      text-align: center;
+      padding: 8px 0 12px;
+      font-variant-numeric: tabular-nums;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .numpad-quick {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .numpad-quick button {
+      padding: 8px 0;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .numpad-quick button:active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: scale(0.95);
+    }
+    .numpad-keys {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .numpad-key {
+      padding: 18px 0;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-variant-numeric: tabular-nums;
+    }
+    .numpad-key:active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: scale(0.95);
+    }
+    .numpad-key-del {
+      color: var(--danger);
+      font-size: 20px;
+    }
+    .numpad-key-dot {
+      font-size: 28px;
+    }
+    .numpad-footer {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 10px;
+    }
+    .numpad-cancel {
+      padding: 14px 0;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--text-secondary);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .numpad-cancel:active {
+      opacity: 0.7;
+    }
+    .numpad-confirm {
+      padding: 14px 0;
+      background: var(--primary);
+      border: none;
+      border-radius: 14px;
+      color: #000;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .numpad-confirm:active {
+      opacity: 0.85;
+      transform: scale(0.98);
+    }
+
+    /* 可点击的数值显示区域 */
+    .numpad-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+      transition: all 0.15s;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .numpad-input:active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
   </style>
 </head>
+
 <body>
   <div id="app">
     <!-- ===== 今日页 ===== -->
@@ -1758,6 +1936,142 @@
   <div class="toast" id="toast"></div>
 
   <script>
+  // 数字面板辅助函数 - 今日训练
+    window.numpadState = {
+      value: '0',
+      callback: null,
+      type: 'weight' // weight 支持小数, reps 只支持整数
+    };
+
+    window.openSetNumpad = function(idx, setIdx, field, value) {
+      const title = field === 'weight' ? '重量(kg)' : '次数';
+      const type = field === 'weight' ? 'weight' : 'reps';
+      openNumpad(title, value, (v) => {
+        updateSet(idx, setIdx, field, v);
+      }, type);
+    }
+
+    // 数字面板辅助函数 - 补卡
+    window.openMakeupSetNumpad = function(idx, setIdx, field, value) {
+      const title = field === 'weight' ? '重量(kg)' : '次数';
+      const type = field === 'weight' ? 'weight' : 'reps';
+      openNumpad(title, value, (v) => {
+        updateMakeupSet(idx, setIdx, field, v);
+      }, type);
+    }
+    window.openNumpad = function(title, value, callback, type = 'weight') {
+      window.numpadState.value = String(value || '0');
+      window.numpadState.callback = callback;
+      window.numpadState.type = type;
+      document.getElementById('numpad-title').textContent = title;
+      document.getElementById('numpad-value').textContent = window.numpadState.value;
+      
+      // 根据类型调整快速按钮
+      const quickBtns = document.querySelectorAll('#numpad-quick button');
+      if (type === 'reps') {
+        quickBtns[0].textContent = '-5';
+        quickBtns[1].textContent = '-2';
+        quickBtns[2].textContent = '-1';
+        quickBtns[3].textContent = '+1';
+        quickBtns[4].textContent = '+2';
+        quickBtns[5].textContent = '+5';
+      } else {
+        quickBtns[0].textContent = '-5';
+        quickBtns[1].textContent = '-2.5';
+        quickBtns[2].textContent = '-1';
+        quickBtns[3].textContent = '+1';
+        quickBtns[4].textContent = '+2.5';
+        quickBtns[5].textContent = '+5';
+      }
+      
+      var overlay = document.getElementById('numpad-overlay');
+      if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.background = 'rgba(0,0,0,0.6)';
+        overlay.style.zIndex = '9999';
+      }
+      document.body.style.overflow = 'hidden';
+    }
+
+window.closeNumpad = function() {
+      var overlay = document.getElementById('numpad-overlay');
+      if (overlay) overlay.style.display = 'none';
+      document.body.style.overflow = '';
+      window.numpadState.callback = null;
+    }
+
+    window.numpadInput = function(key) {
+      let val = window.numpadState.value;
+      
+      if (key === '.') {
+        // 次数不支持小数
+        if (window.numpadState.type === 'reps') return;
+        // 已有小数点
+        if (val.includes('.')) return;
+        val = val + '.';
+      } else {
+        // 数字输入
+        if (val === '0') {
+          val = key;
+        } else {
+          val = val + key;
+        }
+      }
+      
+      // 限制长度
+      if (val.length > 6) return;
+      
+      window.numpadState.value = val;
+      document.getElementById('numpad-value').textContent = val;
+    }
+
+    window.numpadDelete = function() {
+      let val = window.numpadState.value;
+      if (val.length > 1) {
+        val = val.slice(0, -1);
+      } else {
+        val = '0';
+      }
+      window.numpadState.value = val;
+      document.getElementById('numpad-value').textContent = val;
+    }
+
+    window.numpadQuick = function(delta) {
+      let current = parseFloat(window.numpadState.value) || 0;
+      let newVal = current + delta;
+      
+      // 不能小于0
+      if (newVal < 0) newVal = 0;
+      
+      // 次数取整
+      if (window.numpadState.type === 'reps') {
+        newVal = Math.round(newVal);
+      }
+      
+      // 重量保留一位小数
+      if (window.numpadState.type === 'weight') {
+        newVal = Math.round(newVal * 10) / 10;
+      }
+      
+      window.numpadState.value = String(newVal);
+      document.getElementById('numpad-value').textContent = window.numpadState.value;
+    }
+
+    window.confirmNumpad = function() {
+      let val = parseFloat(window.numpadState.value) || 0;
+      
+      // 次数取整
+      if (window.numpadState.type === 'reps') {
+        val = Math.round(val);
+      }
+      
+      if (window.numpadState.callback) {
+        window.numpadState.callback(val);
+      }
+      closeNumpad();
+    }
+
+
     // ===== 预设动作库 =====
     const DEFAULT_EXERCISES = [
       // 胸
@@ -2131,11 +2445,11 @@
                     <div class="set-num">${setIdx + 1}</div>
                     <div class="input-group">
                       <label>重量(kg)</label>
-                      <input type="number" value="${set.weight}" oninput="updateSet(${idx}, ${setIdx}, 'weight', this.value)" />
+                      <div class="numpad-input" onclick="openSetNumpad(${idx}, ${setIdx}, 'weight', ${set.weight})">${set.weight}</div>
                     </div>
                     <div class="input-group">
                       <label>次数</label>
-                      <input type="number" value="${set.reps}" oninput="updateSet(${idx}, ${setIdx}, 'reps', this.value)" />
+                      <div class="numpad-input" onclick="openSetNumpad(${idx}, ${setIdx}, 'reps', ${set.reps})">${set.reps}</div>
                     </div>
                     <button class="remove-set" onclick="removeSet(${idx}, ${setIdx})">×</button>
                   </div>
@@ -2313,8 +2627,8 @@
               ${ex.sets.map((set, sIdx) => `
                 <div class="set-row" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                   <span style="width:20px;font-size:12px;color:var(--text-muted);">${sIdx + 1}</span>
-                  <input type="number" value="${set.weight}" style="flex:1;padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:13px;" onchange="updateMakeupSet(${idx}, ${sIdx}, 'weight', this.value)" placeholder="重量kg" />
-                  <input type="number" value="${set.reps}" style="flex:1;padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:13px;" onchange="updateMakeupSet(${idx}, ${sIdx}, 'reps', this.value)" placeholder="次数" />
+                  <div class="numpad-input" style="flex:1;padding:8px;" onclick="openMakeupSetNumpad(${idx}, ${sIdx}, 'weight', ${set.weight})">${set.weight}</div>
+                  <div class="numpad-input" style="flex:1;padding:8px;" onclick="openMakeupSetNumpad(${idx}, ${sIdx}, 'reps', ${set.reps})">${set.reps}</div>
                   <button style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;" onclick="removeMakeupSet(${idx}, ${sIdx})">×</button>
                 </div>
               `).join('')}
@@ -2463,11 +2777,11 @@
                 <div class="set-num">${setIdx + 1}</div>
                 <div class="input-group">
                   <label>重量(kg)</label>
-                  <input type="number" value="${set.weight}" oninput="updateMakeupSet(${idx}, ${setIdx}, 'weight', this.value)" />
+                  <div class="numpad-input" onclick="openMakeupSetNumpad(${idx}, ${setIdx}, 'weight', ${set.weight})">${set.weight}</div>
                 </div>
                 <div class="input-group">
                   <label>次数</label>
-                  <input type="number" value="${set.reps}" oninput="updateMakeupSet(${idx}, ${setIdx}, 'reps', this.value)" />
+                  <div class="numpad-input" onclick="openMakeupSetNumpad(${idx}, ${setIdx}, 'reps', ${set.reps})">${set.reps}</div>
                 </div>
                 <button class="remove-set" onclick="removeMakeupSet(${idx}, ${setIdx})">×</button>
               </div>
@@ -2541,9 +2855,7 @@
 
     function updateSet(exerciseIdx, setIdx, field, value) {
       appState.todayWorkout.exercises[exerciseIdx].sets[setIdx][field] = value;
-      const volume = calculateTodayVolume();
-      document.getElementById('stat-volume').textContent = Math.round(volume);
-      document.getElementById('stat-exercises').textContent = appState.todayWorkout.exercises.length;
+      renderToday();
     }
 
     function finishWorkout() {
@@ -3163,6 +3475,47 @@
 
     // 启动
     init();
-  </script>
+
+
+    
+
+</script><!-- 数字输入面板 -->
+<div id="numpad-overlay" class="numpad-overlay" onclick="closeNumpad()">
+  <div class="numpad-panel" onclick="event.stopPropagation()">
+    <div class="numpad-header">
+      <div class="numpad-title" id="numpad-title">重量(kg)</div>
+      <div class="numpad-close" onclick="closeNumpad()">×</div>
+    </div>
+    <div class="numpad-value" id="numpad-value">20</div>
+    <div class="numpad-quick" id="numpad-quick">
+      <button onclick="numpadQuick(-5)">-5</button>
+      <button onclick="numpadQuick(-2.5)">-2.5</button>
+      <button onclick="numpadQuick(-1)">-1</button>
+      <button onclick="numpadQuick(1)">+1</button>
+      <button onclick="numpadQuick(2.5)">+2.5</button>
+      <button onclick="numpadQuick(5)">+5</button>
+    </div>
+    <div class="numpad-keys">
+      <button class="numpad-key" onclick="numpadInput('1')">1</button>
+      <button class="numpad-key" onclick="numpadInput('2')">2</button>
+      <button class="numpad-key" onclick="numpadInput('3')">3</button>
+      <button class="numpad-key" onclick="numpadInput('4')">4</button>
+      <button class="numpad-key" onclick="numpadInput('5')">5</button>
+      <button class="numpad-key" onclick="numpadInput('6')">6</button>
+      <button class="numpad-key" onclick="numpadInput('7')">7</button>
+      <button class="numpad-key" onclick="numpadInput('8')">8</button>
+      <button class="numpad-key" onclick="numpadInput('9')">9</button>
+      <button class="numpad-key numpad-key-dot" onclick="numpadInput('.')">.</button>
+      <button class="numpad-key" onclick="numpadInput('0')">0</button>
+      <button class="numpad-key numpad-key-del" onclick="numpadDelete()">⌫</button>
+    </div>
+    <div class="numpad-footer">
+      <button class="numpad-cancel" onclick="closeNumpad()">取消</button>
+      <button class="numpad-confirm" onclick="confirmNumpad()">确认</button>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
