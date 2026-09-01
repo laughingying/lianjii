@@ -3624,48 +3624,58 @@ window.closeNumpad = function() {
 <!-- 添加到桌面引导弹窗 -->
 <div id="install-guide-modal" class="install-guide-overlay" style="display:flex;">
   <div class="install-guide-card">
-    <div class="install-guide-header">
-      <div class="install-guide-icon">💪</div>
-      <h3>把练记添加到桌面</h3>
-      <p>添加后像App一样使用，离线可用，无广告</p>
+    <div class="install-guide-icon">💪</div>
+    <h3 class="install-guide-title">把练记添加到桌面</h3>
+    <p class="install-guide-desc">添加后像App一样使用，离线可用，无广告</p>
+    
+    <!-- 微信/QQ内置浏览器提示 -->
+    <div id="wechat-tip" style="display:none; background:#fff3e0; border-radius:12px; padding:12px; margin-bottom:16px; font-size:13px; color:#e65100; line-height:1.6;">
+      ⚠️ 当前是微信/QQ内置浏览器<br>
+      请点右上角 <b>···</b> → 选择<b>"在浏览器中打开"</b>
     </div>
-    <div class="install-guide-steps">
-      <div class="install-step android-step">
+    
+    <!-- 安卓步骤 -->
+    <div id="android-steps">
+      <div class="install-step">
         <div class="step-num">1</div>
         <div class="step-content">
-          <div class="step-title">用Chrome/Edge打开本页面</div>
-          <div class="step-desc">微信/QQ内置浏览器不支持，请复制链接到浏览器</div>
+          <div class="step-title">用浏览器打开本页面</div>
+          <div class="step-desc">Chrome/Edge/华为/小米/QQ/UC等都可以</div>
         </div>
       </div>
-      <div class="install-step android-step">
+      <div class="install-step">
         <div class="step-num">2</div>
         <div class="step-content">
-          <div class="step-title">点右上角 ⋮ 菜单</div>
-          <div class="step-desc">选择"添加到主屏幕"或"安装应用"</div>
+          <div class="step-title">点右上角菜单 ⋮ 或 …</div>
+          <div class="step-desc">选择"添加到主屏幕"或"添加桌面快捷方式"</div>
         </div>
       </div>
-      <div class="install-step android-step">
+      <div class="install-step">
         <div class="step-num">3</div>
         <div class="step-content">
           <div class="step-title">点桌面图标启动</div>
           <div class="step-desc">像普通App一样快速进入健身记录</div>
         </div>
       </div>
-      <div class="install-step ios-step" style="display:none">
+    </div>
+    
+    <!-- iOS步骤 -->
+    <div id="ios-steps" style="display:none;">
+      <div class="install-step">
         <div class="step-num">1</div>
         <div class="step-content">
-          <div class="step-title">用Safari打开本页面</div>
-          <div class="step-desc">微信/QQ内置浏览器不支持，请用Safari</div>
+          <div class="step-title">用 Safari 打开本页面</div>
+          <div class="step-desc">iPhone/iPad 自带浏览器</div>
         </div>
       </div>
-      <div class="install-step ios-step" style="display:none">
+      <div class="install-step">
         <div class="step-num">2</div>
         <div class="step-content">
           <div class="step-title">点底部分享按钮 ⬆️</div>
           <div class="step-desc">往下滑选择"添加到主屏幕"</div>
         </div>
       </div>
-      <div class="install-step ios-step" style="display:none">
+      <div class="install-step">
         <div class="step-num">3</div>
         <div class="step-content">
           <div class="step-title">点桌面图标启动</div>
@@ -3673,21 +3683,38 @@ window.closeNumpad = function() {
         </div>
       </div>
     </div>
+    
     <button class="install-guide-close" onclick="document.getElementById('install-guide-modal').style.display='none'; localStorage.setItem('lianjii_install_guide_shown', '1');">我知道了</button>
   </div>
 </div>
 
 <script>
-// 页面加载后判断是否隐藏引导弹窗
 window.addEventListener('DOMContentLoaded', function() {
   try {
     var modal = document.getElementById('install-guide-modal');
     if (!modal) return;
-    // 如果是PWA模式或已显示过，隐藏弹窗
+    
+    // 检测是否是PWA模式或已显示过
     var isPWA = window.matchMedia('(display-mode: standalone)').matches;
     var hasShown = localStorage.getItem('lianjii_install_guide_shown');
     if (isPWA || hasShown) {
       modal.style.display = 'none';
+      return;
+    }
+    
+    // 检测设备和浏览器
+    var ua = navigator.userAgent;
+    var isIOS = /iPad|iPhone|iPod/.test(ua);
+    var isWechat = /MicroMessenger/i.test(ua);
+    var isQQ = /QQ\//i.test(ua) || /MQQBrowser/i.test(ua);
+    
+    // 显示对应步骤
+    document.getElementById('android-steps').style.display = isIOS ? 'none' : 'block';
+    document.getElementById('ios-steps').style.display = isIOS ? 'block' : 'none';
+    
+    // 微信/QQ内置浏览器提示
+    if (isWechat || isQQ) {
+      document.getElementById('wechat-tip').style.display = 'block';
     }
   } catch(e) {
     console.error(e);
