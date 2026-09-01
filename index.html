@@ -3690,6 +3690,15 @@ window.closeNumpad = function() {
 </div>
 
 <script>
+// 注册Service Worker，支持PWA一键安装和离线
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').catch(function(err) {
+      console.log('Service Worker注册失败:', err);
+    });
+  });
+}
+
 // 保存beforeinstallprompt事件，用于一键安装
 var deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', function(e) {
