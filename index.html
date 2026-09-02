@@ -536,6 +536,13 @@
       padding: 12px 20px calc(12px + var(--safe-bottom));
       background: linear-gradient(to top, var(--bg) 60%, transparent);
       margin: 0 -20px -20px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .big-action-btn button,
+    .big-action-btn > div {
+      pointer-events: auto;
     }
 
     .big-action-btn button {
@@ -2042,7 +2049,8 @@
     window.numpadState = {
       value: '0',
       callback: null,
-      type: 'weight' // weight 支持小数, reps 只支持整数
+      type: 'weight', // weight 支持小数, reps 只支持整数
+      firstInput: true // 首次输入替换当前值，后续输入追加
     };
 
     window.openSetNumpad = function(idx, setIdx, field, value) {
@@ -2065,8 +2073,15 @@
       window.numpadState.value = String(value || '0');
       window.numpadState.callback = callback;
       window.numpadState.type = type;
+      window.numpadState.firstInput = true; // 重置首次输入标记
       document.getElementById('numpad-title').textContent = title;
       document.getElementById('numpad-value').textContent = window.numpadState.value;
+      
+      // 根据类型隐藏/显示小数点按钮
+      var dotBtn = document.querySelector('.numpad-key-dot');
+      if (dotBtn) {
+        dotBtn.style.display = (type === 'reps') ? 'none' : 'block';
+      }
       
       // 根据类型调整快速按钮
       const quickBtns = document.querySelectorAll('#numpad-quick button');
@@ -2110,10 +2125,20 @@ window.closeNumpad = function() {
         if (window.numpadState.type === 'reps') return;
         // 已有小数点
         if (val.includes('.')) return;
-        val = val + '.';
+        // 首次输入小数点，先补0
+        if (window.numpadState.firstInput) {
+          val = '0.';
+          window.numpadState.firstInput = false;
+        } else {
+          val = val + '.';
+        }
       } else {
         // 数字输入
-        if (val === '0') {
+        if (window.numpadState.firstInput) {
+          // 首次输入替换当前值
+          val = key;
+          window.numpadState.firstInput = false;
+        } else if (val === '0') {
           val = key;
         } else {
           val = val + key;
